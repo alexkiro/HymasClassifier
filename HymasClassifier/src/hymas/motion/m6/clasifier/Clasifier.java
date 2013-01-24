@@ -9,4 +9,6 @@ import java.util.LinkedList;
 public class Clasifier {
 
      private static LinkedList<Bearing> bearings = new LinkedList<>();
+     //TODO:
+     
 }

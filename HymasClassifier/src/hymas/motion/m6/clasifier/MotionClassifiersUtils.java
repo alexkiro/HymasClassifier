@@ -20,7 +20,7 @@ abstract class MotionClassifiersUtils {
     /**
      * Computes stops with 0 tolerance
      *
-     * @param speeds list of speed measurements     
+     * @param speeds list of speed measurements
      * @return
      */
     public static List<Long> computeStops(List<Speed> speeds) {
@@ -54,7 +54,6 @@ abstract class MotionClassifiersUtils {
      */
     public static float computeFrequency(List<Long> data, long startTime, long endTime) {
         float time = (endTime - startTime) / 60000.0f;
-        System.out.println(time);
         return data.size() / time;
     }
 
@@ -193,7 +192,7 @@ abstract class MotionClassifiersUtils {
 
         } catch (IOException | ParserConfigurationException | SAXException e) {
             e.printStackTrace();
-        } 
+        }
         return isInCity;
     }
 
@@ -232,21 +231,21 @@ abstract class MotionClassifiersUtils {
      * @param data
      * @return deviatia maxima de la medie
      */
-    public float computeFluctuations(List<Float> data) {
+    public static float computeFluctuations(List<Float> data) {
         float sum = 0f;
         int index = 0;
         float media = 0f;
         float max = 0f;
 
+        if (data.isEmpty()){
+            return 0f;
+        }
+        
         for (Float i : data) {
             sum = sum + i;
         }
-
-        try {
-            media = sum / data.size();
-        } catch (ArithmeticException i) {
-            i.printStackTrace();
-        }
+        
+        media = sum / data.size();
 
         for (Float i : data) {
             Float difference = Math.abs(media - i);

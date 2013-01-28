@@ -10,28 +10,21 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Clasa singleton ce colecteaza si prelucreaza date, care, impreuna cu clasificatorul
- * generat de Weka (WekaClassifier).
- * <br/> <br/>
- * Deasemeni permite atasarea unor ChangeMotionListener pentru a notifica alte 
- * aplicatii de schimbare situatiei de miscare
- * <br/><br/>
- * Utilizare:
+ * Clasa singleton ce colecteaza si prelucreaza date, care, impreuna cu
+ * clasificatorul generat de Weka (WekaClassifier). <br/> <br/> Deasemeni
+ * permite atasarea unor ChangeMotionListener pentru a notifica alte aplicatii
+ * de schimbare situatiei de miscare <br/><br/> Utilizare:
  * <pre> {@code
  * MotionClassifier.getInstance().registerChangeMotionListener(new ChangeMotionListener() {
- *          @Override
- *          public void onChangeMotion(Label oldMotion, Label newMotion) {
- *              //foloseste newMotion
- *          }
- *      });
- *     MotionClassifier.getInstance().startClassifying(); //pornire clasificator
  *
- *     //...
- *     //adaugare de date colectate de la senzori
- *     MotionClassifier.getInstance().addGpsData(47.17410181649029, 27.575028548017144, 5.0, 62.0, 1359032216000l);
- *     // ...
- *     MotionClassifier.getInstance().stopClassifying();    
- * }</pre>
+ * @Override public void onChangeMotion(Label oldMotion, Label newMotion) {
+ * //foloseste newMotion } });
+ * MotionClassifier.getInstance().startClassifying(); //pornire clasificator
+ *
+ *     //... //adaugare de date colectate de la senzori
+ * MotionClassifier.getInstance().addGpsData(47.17410181649029,
+ * 27.575028548017144, 5.0, 62.0, 1359032216000l); // ...
+ * MotionClassifier.getInstance().stopClassifying(); }</pre>
  * @author Chirila Alexandru
  */
 public class MotionClassifier {
@@ -41,18 +34,14 @@ public class MotionClassifier {
     private final double acuracyThreshold = 30.0;
     private final double bearingThreshold = 15.0;
     private final double tolerance = 0.833333; //3kph
-    
-    
     private LinkedList<Bearing> bearings = new LinkedList<>();
     private LinkedList<Speed> speeds = new LinkedList<>();
     private LinkedList<Boolean> revGeos = new LinkedList<>();
-       
     private double[] lastGpsData = null;
     private long lastGpsTime = 0;
     private Label lastKnownMotion = null;
     private long startTime;
     private long endTime;
-    
     //scheduling
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> handle;
@@ -64,7 +53,7 @@ public class MotionClassifier {
                 endTime = System.currentTimeMillis();
                 try {
                     List<Double> speedLst = MotionClassifiersUtils.toList(speeds);
-                    lastKnownMotion =
+                    Label newMotion =
                             WekaClassifier.classify(
                             MotionClassifiersUtils.computeAverage(speeds, acuracyThreshold),
                             MotionClassifiersUtils.computeFluctuations(speedLst),
@@ -75,6 +64,11 @@ public class MotionClassifier {
                             MotionClassifiersUtils.computeStops(speeds, tolerance),
                             startTime, endTime),
                             MotionClassifiersUtils.computeAverage(revGeos));
+                    if (newMotion != lastKnownMotion) {
+                        notifyChangeEvents(lastKnownMotion, newMotion);
+                        lastKnownMotion = newMotion;
+                    }
+
                 } catch (Exception ex) {
                     Logger.getLogger(MotionClassifier.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -93,8 +87,15 @@ public class MotionClassifier {
         return ClassifierHolder.INSTANCE;
     }
 
+    private void notifyChangeEvents(final Label oldMotion, final Label newMotion) {
+        for (ChangeMotionListener changeMotionListener : onChangeEvents) {
+            changeMotionListener.onChangeMotion(oldMotion, newMotion);
+        }
+    }
+
     /**
-     * Incepe procesul de clasificare la intervale regulate a situatiei de miscare
+     * Incepe procesul de clasificare la intervale regulate a situatiei de
+     * miscare
      */
     public void startClassifying() {
         startTime = System.currentTimeMillis();
@@ -102,7 +103,8 @@ public class MotionClassifier {
     }
 
     /**
-     * Opreste procesul de clasificare la intervale regulate a situatiei de miscare
+     * Opreste procesul de clasificare la intervale regulate a situatiei de
+     * miscare
      */
     public void stopClassifying() {
         handle.cancel(false);
@@ -110,6 +112,7 @@ public class MotionClassifier {
 
     /**
      * Adauga date primite de la gps la listele de date ce vor fi analizate
+     *
      * @param lat latitudine
      * @param lng longitudine
      * @param acu accuracy
@@ -146,28 +149,31 @@ public class MotionClassifier {
 
     /**
      * Intoarce rezultatul ultimei clasificari
-     * @return 
+     *
+     * @return
      */
     public Label getLastKnownMotion() {
         return lastKnownMotion;
     }
-    
+
     /**
      * Inregistreaza un listner ce va fi apelat atunci cand se schimba situatia
      * de miscare
-     * @param cml 
+     *
+     * @param cml
      */
-    public void registerChangeMotionListener(ChangeMotionListener cml){
+    public void registerChangeMotionListener(ChangeMotionListener cml) {
         onChangeEvents.add(cml);
     }
-    
+
     /**
-     * Sterge un listener din lista ce va  fi apelata atunci cand se schimba situatia
-     * de miscare
-     * @param cml 
+     * Sterge un listener din lista ce va fi apelata atunci cand se schimba
+     * situatia de miscare
+     *
+     * @param cml
      */
-    public void unregisterChangeMotionListenter(ChangeMotionListener cml){
-        onChangeEvents.remove(cml);        
+    public void unregisterChangeMotionListenter(ChangeMotionListener cml) {
+        onChangeEvents.remove(cml);
     }
 
     private static class ClassifierHolder {

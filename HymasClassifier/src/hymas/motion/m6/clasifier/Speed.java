@@ -1,12 +1,8 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package hymas.motion.m6.clasifier;
 
 /**
  *
- * @author Kiro
+ * @author Chirila Alexandru
  */
 class Speed {
 
@@ -14,13 +10,13 @@ class Speed {
         
     }
     
-    public Speed(double speed, float accuracy, long time) {
+    public Speed(double speed, double accuracy, long time) {
         this.speed = speed;
         this.accuracy = accuracy;
         this.time = time;
     }
     
     double speed;
-    float accuracy;
+    double accuracy;
     long time;
 }

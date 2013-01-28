@@ -2,8 +2,8 @@ package hymas.motion.m6.clasifier;
 
 class Bearing {
 
-    private int bearing;
-    private int accuracy;
+    private double bearing;
+    private double accuracy;
     private long timestamp;
 
     /**
@@ -14,7 +14,7 @@ class Bearing {
      * @param _timestamp
      * @throws BearingException
      */
-    public Bearing(int bearing, int accuracy, long timestamp) throws BearingException {
+    public Bearing(double bearing, double accuracy, long timestamp) throws BearingException {
         if (bearing < 0 || bearing > 360) {
             throw new BearingException("INVALID_BEARING");
         }
@@ -30,11 +30,11 @@ class Bearing {
         this.timestamp = timestamp;
     }
 
-    public int getBearing() {
+    public double getBearing() {
         return bearing;
     }
 
-    public int getAccuracy() {
+    public double getAccuracy() {
         return accuracy;
     }
 

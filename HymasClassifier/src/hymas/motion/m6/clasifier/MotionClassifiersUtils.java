@@ -1,21 +1,15 @@
 package hymas.motion.m6.clasifier;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.LinkedList;
 import java.util.List;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
+/**
+ * Clasa ce contine utilitare folosite pentru a calcula parametri necesari
+ * deducerii situatiei de miscare
+ */
 abstract class MotionClassifiersUtils {
+
+    
 
     /**
      * Computes stops with 0 tolerance
@@ -52,8 +46,8 @@ abstract class MotionClassifiersUtils {
      * @param endTime sfarsitul intervalului
      * @return frecventa pe minut a intamplarii
      */
-    public static float computeFrequency(List<Long> data, long startTime, long endTime) {
-        float time = (endTime - startTime) / 60000.0f;
+    public static double computeFrequency(List<Long> data, long startTime, long endTime) {
+        double time = (endTime - startTime) / 60000.0f;
         return data.size() / time;
     }
 
@@ -68,7 +62,7 @@ abstract class MotionClassifiersUtils {
      * @return
      * @throws BearingException
      */
-    private static Bearing compareBearings(int _bearingThreshold, int _accuracyThreshold, Bearing _previous, Bearing _current) throws BearingException {
+    private static Bearing compareBearings(double _bearingThreshold, double _accuracyThreshold, Bearing _previous, Bearing _current) throws BearingException {
         if (_bearingThreshold < 0 || _bearingThreshold > 360) {
             throw new BearingException("INVALID_BEARING_THRESHOLD");
         }
@@ -116,7 +110,7 @@ abstract class MotionClassifiersUtils {
      * @return
      * @throws BearingException
      */
-    public static List<Long> computeDirectionChanges(int _bearingThreshold, int _accuracyThreshold, List<Bearing> _data_list) throws BearingException {
+    public static List<Long> computeDirectionChanges(double _bearingThreshold, double _accuracyThreshold, List<Bearing> _data_list) throws BearingException {
         if (_bearingThreshold < 0 || _bearingThreshold > 360) {
             throw new BearingException("INVALID_BEARING_THRESHOLD");
         }
@@ -141,60 +135,6 @@ abstract class MotionClassifiersUtils {
         return filteredBearings;
     }
 
-    /**
-     * Folosim serviciul oferite de Nominatim pentru a afla daca coordonatele
-     * pasate ca parametrii se afla in interiorul unui oras. Datele sunt primite
-     * de la serviciu in xml, nu sunt stocate local ci procesate prin
-     * stream-uri.
-     *
-     *
-     * @param latitude
-     * @param longitude
-     * @return True daca se afla in interiorul unui oras
-     */
-    public static boolean checkIfInCity(double latitude, double longitude) {
-
-        boolean isInCity = false;
-        String restEndPoint = "http://nominatim.openstreetmap.org/reverse?format=xml&lat="
-                + latitude + "&lon=" + longitude + "&zoom=18&addressdetails=1";
-        String line;
-        InputStream inputStreamContainer = null;
-        StringBuilder queryResult = new StringBuilder();
-
-        try {
-
-            URL url = new URL(restEndPoint);
-
-            inputStreamContainer = url.openStream();
-            URLConnection urlc = url.openConnection();
-            urlc.setDoOutput(true);
-            urlc.setAllowUserInteraction(false);
-            try (BufferedReader queryStream = new BufferedReader(new InputStreamReader(inputStreamContainer))) {
-                while ((line = queryStream.readLine()) != null) {
-                    queryResult.append(line);
-                    queryResult.append("\n");
-                }
-
-                inputStreamContainer = url.openStream();
-                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder builder = factory.newDocumentBuilder();
-
-                Document doc = builder.parse(inputStreamContainer);
-
-                NodeList listOfCityTags = doc.getElementsByTagName("city");
-
-                if (listOfCityTags.getLength() > 0) {
-                    isInCity = true;
-                } else {
-                    return isInCity;
-                }
-            }
-
-        } catch (IOException | ParserConfigurationException | SAXException e) {
-            e.printStackTrace();
-        }
-        return isInCity;
-    }
 
     /**
      * Metoda care calculeaza viteza cu care se deplaseaza intre 2 coordonate
@@ -231,28 +171,89 @@ abstract class MotionClassifiersUtils {
      * @param data
      * @return deviatia maxima de la medie
      */
-    public static float computeFluctuations(List<Float> data) {
-        float sum = 0f;
+    public static double computeFluctuations(List<Double> data) {
+        double sum = 0;
         int index = 0;
-        float media = 0f;
-        float max = 0f;
+        double media = 0;
+        double max = 0;
 
-        if (data.isEmpty()){
+        if (data.isEmpty()) {
             return 0f;
         }
-        
-        for (Float i : data) {
+
+        for (Double i : data) {
             sum = sum + i;
         }
-        
+
         media = sum / data.size();
 
-        for (Float i : data) {
-            Float difference = Math.abs(media - i);
+        for (Double i : data) {
+            Double difference = Math.abs(media - i);
             if (max < difference) {
                 max = difference;
             }
         }
         return max;
     }
+
+    /**
+     * Calculeaza deviatia medie de la media pentru datele primite
+     *
+     * @param data
+     * @return deviatia medie
+     */
+    public static double computeAverageFluctuations(List<Double> data) {
+        double sum = 0;
+        int index = 0;
+        double media = 0;
+        double max = 0;
+
+        if (data.isEmpty()) {
+            return 0;
+        }
+
+        for (Double i : data) {
+            sum = sum + i;
+        }
+
+        media = sum / data.size();
+        double dev = 0;
+
+        for (Double i : data) {
+            dev += Math.abs(media - i);
+        }
+        return dev / data.size();
+    }
+    
+    public static List<Double> toList(List<Speed> speeds) {
+        List<Double> res = new LinkedList<>();
+        for (Speed speed : speeds) {
+            res.add(speed.speed);
+        }
+        return res;
+    }
+
+    public static boolean computeAverage(List<Boolean> revGeos) {
+        int trueNr = 0;
+        int falseNr = 0;
+        for (Boolean b : revGeos) {
+            if (b) {
+                trueNr++;
+            } else {
+                falseNr++;
+            }
+        }
+        return trueNr >= falseNr;
+    }
+
+    public static double computeAverage(List<Speed> speeds, double threshold) {
+        double sum = 0.0;
+        for (Speed speed : speeds) {
+            if (speed.accuracy <= threshold) {
+                sum += speed.speed;
+            }
+        }
+        return sum / speeds.size();
+    }
+
 }

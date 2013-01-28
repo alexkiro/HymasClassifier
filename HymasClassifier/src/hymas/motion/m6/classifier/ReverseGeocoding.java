@@ -1,4 +1,4 @@
-package hymas.motion.m6.clasifier;
+package hymas.motion.m6.classifier;
 
 import java.io.BufferedReader;
 import java.io.IOException;

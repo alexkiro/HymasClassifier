@@ -1,4 +1,4 @@
-package hymas.motion.m6.clasifier;
+package hymas.motion.m6.classifier;
 
 /*
  === Run information ===

@@ -1,4 +1,4 @@
-package hymas.motion.m6.clasifier;
+package hymas.motion.m6.classifier;
 
 /**
  * Listner ce va fi apelat cand se schimba situatia de miscare trebuie inregistrat
